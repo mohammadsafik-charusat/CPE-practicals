@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Records Office — The Beam Inspection Story</title>
+<title>Lab 1 — Strings & Linked Lists</title>
 <style>
   :root{
     --kraft: #C9A876;
@@ -23,7 +23,7 @@
     font-family:var(--mono); padding:28px 16px 60px;
   }
   .sheet{
-    max-width:820px; margin:0 auto; background:var(--paper);
+    max-width:880px; margin:0 auto; background:var(--paper);
     border:1px solid var(--paper-line);
     box-shadow:0 12px 0 -6px rgba(0,0,0,0.08), 0 18px 30px rgba(0,0,0,0.18);
     padding:36px 40px 44px; position:relative;
@@ -36,460 +36,559 @@
     display:flex; justify-content:space-between; align-items:flex-end;
     border-bottom:3px double var(--ink); padding-bottom:12px; margin-bottom:8px;
   }
-  .letterhead h1{ font-family:var(--slab); font-size:26px; margin:0; color:var(--ink); }
+  .letterhead h1{ font-family:var(--slab); font-size:25px; margin:0; color:var(--ink); }
   .letterhead .file-no{ font-size:11px; color:var(--ink-soft); text-align:right; line-height:1.5; }
   .subtitle{ font-size:13px; color:var(--ink-soft); margin-bottom:24px; }
 
-  .stepper{
-    display:flex; justify-content:center; gap:6px; margin:0 0 22px;
+  .tabs{ display:flex; gap:6px; margin-bottom:22px; flex-wrap:wrap; }
+  .tab{
+    font-family:var(--mono); font-size:12px; text-transform:uppercase; letter-spacing:0.04em;
+    padding:10px 16px; background:rgba(43,58,74,0.05); border:1px solid var(--paper-line);
+    cursor:pointer; color:var(--ink-soft); transition:background .15s, color .15s;
   }
-  .stepdot{
-    width:9px; height:9px; border-radius:50%; background:var(--paper-line);
-    border:1px solid var(--ink-soft); cursor:pointer; transition:background .2s, transform .2s;
-  }
-  .stepdot.active{ background:var(--stamp-red); border-color:var(--stamp-red-dark); transform:scale(1.25); }
+  .tab.active{ background:var(--ink); color:var(--paper); border-color:var(--ink); }
+  .tab:hover:not(.active){ background:rgba(43,58,74,0.1); }
 
-  .stage-labels{
-    display:flex; justify-content:space-between; font-size:10px; text-transform:uppercase;
-    letter-spacing:0.06em; color:var(--ink-soft); margin-bottom:18px; padding:0 2px;
-  }
-  .stage-labels span.active{ color:var(--ink); font-weight:bold; }
+  .panel{ display:none; }
+  .panel.active{ display:block; }
 
-  .stage-box{
-    background:rgba(255,255,255,0.4); border:1px solid var(--paper-line);
-    padding:22px; min-height:280px; margin-bottom:20px;
-  }
+  .caption{ font-size:13.5px; color:var(--ink-soft); line-height:1.65; margin:0 0 16px; }
+  .caption b{ color:var(--ink); }
 
-  .caption{ font-size:13px; color:var(--ink-soft); line-height:1.6; margin:0 0 18px; }
-
-  .docs{ display:flex; flex-wrap:wrap; gap:6px; }
-  .doc{
-    width:34px; height:44px; background:#fbf6ea; border:1px solid #c9b98f; border-radius:2px;
-    display:flex; align-items:flex-end; justify-content:center; font-size:10px; color:var(--ink-soft);
-    padding-bottom:3px; position:relative;
+  .idea-box{
+    background:rgba(179,58,58,0.06); border-left:3px solid var(--stamp-red);
+    padding:12px 16px; font-size:13px; line-height:1.6; margin-bottom:20px;
   }
-  .doc::before{
-    content:""; position:absolute; top:5px; left:4px; right:4px; height:1px; background:#d8c9a2;
-    box-shadow:0 4px 0 #d8c9a2, 0 8px 0 #d8c9a2;
+  .idea-box b{ color:var(--stamp-red-dark); }
+
+  h3.section-h{
+    font-family:var(--slab); font-size:16px; margin:24px 0 10px; color:var(--ink);
+    border-bottom:1px solid var(--paper-line); padding-bottom:6px;
   }
 
-  .equation{
-    font-size:18px; line-height:1.9; word-break:break-all; margin-bottom:10px;
+  /* --- 2.1 linked list visual --- */
+  .list-row{ display:flex; align-items:center; gap:0; flex-wrap:wrap; margin-bottom:14px; }
+  .llabel{ font-size:11px; color:var(--ink-soft); width:70px; text-transform:uppercase; letter-spacing:.05em; }
+  .node{
+    background:#fbf6ea; border:1px solid #c9b98f; padding:8px 12px; font-size:14px; font-weight:bold;
+    min-width:26px; text-align:center; position:relative;
   }
-  .equation .result{ color:var(--stamp-red); font-weight:bold; }
-  .note{ font-size:12px; color:var(--ink-soft); margin-top:14px; }
+  .arrow{ color:var(--ink-soft); padding:0 6px; font-size:14px; }
+  .node.result{ background:#f3ddb0; border-color:var(--beam-amber); color:var(--stamp-red-dark); }
 
-  .tower{ display:flex; flex-direction:column-reverse; max-width:280px; margin:0 auto; }
-  .floor{
-    display:flex; align-items:center; justify-content:center; height:36px;
-    border:1px solid var(--paper-line); font-family:var(--slab); font-size:15px; font-weight:bold;
-    background:#fbf6ea; color:var(--ink);
-  }
-  .floor.beam{
-    background:#f3ddb0; border-color:var(--beam-amber); color:var(--stamp-red-dark);
-  }
-  .floor.beam .tag{ font-family:var(--mono); font-size:9px; margin-left:6px; text-transform:uppercase; opacity:.85; }
+  table.dry{ width:100%; border-collapse:collapse; font-size:12px; margin:10px 0 18px; }
+  table.dry th, table.dry td{ border:1px solid var(--paper-line); padding:6px 8px; text-align:center; }
+  table.dry th{ background:rgba(43,58,74,0.06); color:var(--ink-soft); text-transform:uppercase; font-size:10.5px; letter-spacing:.05em; }
+  table.dry td.hit{ background:#f3ddb0; color:var(--stamp-red-dark); font-weight:bold; }
 
-  .ledger{
-    background:var(--ink); color:var(--paper); padding:18px 20px 20px; font-size:13px; line-height:1.7;
-    max-width:400px; margin:0 auto;
+  /* --- 2.2 circular visual --- */
+  .circle-wrap{ display:flex; justify-content:center; margin:18px 0; }
+  .circle-item{
+    display:flex; flex-direction:column; align-items:center; gap:4px; margin:0 10px;
   }
-  .ledger-row{
-    display:flex; justify-content:space-between; padding:6px 0;
-    border-bottom:1px dotted rgba(241,232,212,0.25);
+  .circle-box{
+    width:44px; height:44px; border:1px solid var(--paper-line); background:#fbf6ea;
+    display:flex; align-items:center; justify-content:center; font-size:15px; font-weight:bold;
   }
-  .ledger-row .val{ color:#e8c98a; font-weight:bold; word-break:break-all; text-align:right; margin-left:12px; }
-  .ledger-total{
-    margin-top:10px; padding-top:10px; border-top:2px solid rgba(241,232,212,0.4);
-    display:flex; justify-content:space-between; align-items:center;
-  }
-  .ledger-total .num{
-    font-family:var(--slab); font-size:28px; color:var(--stamp-red);
-    background:var(--paper); padding:2px 12px;
-  }
+  .circle-idx{ font-size:10px; color:var(--ink-soft); }
 
-  .controls{
-    display:flex; align-items:center; gap:14px; flex-wrap:wrap;
-    background:rgba(43,58,74,0.04); border:1px dashed var(--ink-soft);
-    padding:12px 16px; margin-bottom:20px;
-  }
-  .controls label{ font-size:11.5px; color:var(--ink-soft); text-transform:uppercase; letter-spacing:0.07em; }
-  .controls input[type=range]{ width:180px; accent-color:var(--stamp-red); }
-  .n-badge{
-    font-family:var(--slab); font-size:19px; font-weight:bold; color:var(--ink);
-    min-width:36px; text-align:center; background:var(--paper); border:1px solid var(--ink); padding:2px 8px;
-  }
-
-  .navrow{ display:flex; justify-content:space-between; gap:12px; }
-  button{
-    font-family:var(--mono); font-size:12.5px; letter-spacing:0.05em; text-transform:uppercase;
-    background:var(--stamp-red); color:var(--paper); border:none; padding:9px 20px; cursor:pointer;
-    transition:transform .08s ease, background .15s ease;
-  }
-  button:hover{ background:var(--stamp-red-dark); }
-  button:active{ transform:scale(0.96); }
-  button:disabled{ background:#b8ab8f; cursor:not-allowed; }
-
-  .codebox{
-    background:#fbf6ea; border:1px solid var(--paper-line); padding:14px 16px;
-    font-size:12.5px; line-height:1.7; overflow-x:auto; margin-bottom:16px;
-  }
-  .codebox .cmt{ color:var(--sage); }
-
-  .why-grid{ display:flex; flex-direction:column; gap:10px; margin-bottom:18px; }
-  .why-card{
-    border-left:3px solid var(--stamp-red); background:rgba(179,58,58,0.06);
-    padding:8px 12px; font-size:12.5px; line-height:1.6;
-  }
-  .why-card b{ color:var(--ink); }
-  .why-card code{
-    background:#fbf6ea; border:1px solid var(--paper-line); padding:1px 5px;
-    font-family:var(--mono); font-size:12px;
-  }
-
-  .dryrun{ width:100%; border-collapse:collapse; font-size:12px; margin-top:6px; }
-  .dryrun th, .dryrun td{
-    border:1px solid var(--paper-line); padding:6px 8px; text-align:center;
-  }
-  .dryrun th{ background:rgba(43,58,74,0.06); color:var(--ink-soft); text-transform:uppercase; font-size:10.5px; letter-spacing:0.05em; }
-  .dryrun td.hit{ background:#f3ddb0; color:var(--stamp-red-dark); font-weight:bold; }
-
-  .part-label{
-    font-size:12px; text-transform:uppercase; letter-spacing:0.07em; color:var(--stamp-red-dark);
-    font-weight:bold; margin:0 0 10px; border-bottom:1px dashed var(--paper-line); padding-bottom:6px;
-  }
-
-  .tracer-wrap{ display:flex; gap:16px; flex-wrap:wrap; margin-bottom:14px; }
-  .trace-code{
-    flex:2; min-width:230px; background:#fbf6ea; border:1px solid var(--paper-line);
-    padding:14px 16px; font-size:12.5px; line-height:2; overflow-x:auto;
-  }
-  .trace-line{ padding:2px 8px; border-left:3px solid transparent; white-space:pre; color:var(--ink-soft); }
-  .trace-line .ln{ display:inline-block; width:16px; color:var(--ink-soft); opacity:.5; }
-  .trace-line.active{
-    background:rgba(179,58,58,0.12); border-left-color:var(--stamp-red);
-    color:var(--ink); font-weight:bold;
-  }
-  .trace-watch{ flex:1; min-width:140px; display:flex; flex-direction:column; gap:8px; }
-  .watch-card{ background:var(--ink); color:var(--paper); padding:10px 12px; }
-  .watch-card .lbl{ font-size:10px; text-transform:uppercase; letter-spacing:0.05em; opacity:.7; }
-  .watch-card .num{
-    font-family:var(--slab); font-size:19px; font-weight:bold; color:var(--stamp-red);
-    background:var(--paper); padding:2px 8px; display:inline-block; margin-top:5px; word-break:break-all;
-  }
-  .trace-note{
-    border-left:3px solid var(--stamp-red); background:rgba(179,58,58,0.06);
-    padding:8px 12px; font-size:12.5px; line-height:1.6; margin-bottom:12px; min-height:38px;
-  }
-  .trace-progress{ font-size:11px; color:var(--ink-soft); margin-bottom:10px; }
-  .trace-controls{ display:flex; gap:8px; flex-wrap:wrap; }
-  .trace-controls button{ padding:7px 14px; font-size:11.5px; }
-  .trace-controls button.ghost{ background:transparent; border:1px solid var(--ink-soft); color:var(--ink); }
-  .trace-controls button.ghost:hover{ background:rgba(43,58,74,0.08); }
-
-  details{ margin-top:24px; border:1px solid var(--paper-line); background:rgba(255,255,255,0.3); }
+  /* --- code --- */
+  details{ margin-top:18px; border:1px solid var(--paper-line); background:rgba(255,255,255,0.3); }
   details summary{
     cursor:pointer; padding:10px 14px; font-size:12px; text-transform:uppercase;
     letter-spacing:0.06em; color:var(--ink); background:rgba(43,58,74,0.06);
   }
   pre{ margin:0; padding:16px; font-size:12.5px; line-height:1.6; color:var(--ink); overflow-x:auto; background:#fbf6ea; }
   .comment{ color:var(--sage); }
+
+  .qa{ margin-top:20px; }
+  .qa-item{
+    border-left:3px solid var(--ink-soft); background:rgba(43,58,74,0.03);
+    padding:8px 14px; font-size:12.5px; line-height:1.6; margin-bottom:8px;
+  }
+  .qa-item b{ color:var(--ink); }
+
+  /* --- interactive dry-run stepper --- */
+  .stepper-box{
+    background:rgba(255,255,255,0.4); border:1px solid var(--paper-line);
+    padding:18px 20px; margin:14px 0 10px;
+  }
+  .row-label{ font-size:10.5px; color:var(--ink-soft); text-transform:uppercase; letter-spacing:.05em; width:78px; display:inline-block; }
+  .cell-row{ display:flex; align-items:center; gap:6px; margin-bottom:10px; flex-wrap:wrap; }
+  .cell{
+    min-width:30px; padding:7px 10px; text-align:center; font-size:13px; font-weight:bold;
+    background:#fbf6ea; border:1px solid #c9b98f; color:var(--ink);
+  }
+  .cell.dim{ opacity:0.35; }
+  .cell.pick{ background:#f3ddb0; border-color:var(--beam-amber); color:var(--stamp-red-dark); transform:scale(1.08); }
+  .cell.result{ background:var(--ink); color:var(--paper); border-color:var(--ink); }
+  .cell.result.pick{ background:var(--beam-amber); color:var(--paper); border-color:var(--stamp-red); }
+  .cell.carry{ background:rgba(179,58,58,0.15); border-color:var(--stamp-red); color:var(--stamp-red-dark); }
+  .step-note{
+    border-left:3px solid var(--stamp-red); background:rgba(179,58,58,0.06);
+    padding:8px 12px; font-size:12.5px; line-height:1.55; margin:12px 0; min-height:36px;
+  }
+  .step-progress{ font-size:11px; color:var(--ink-soft); margin-bottom:8px; }
+  .step-controls{ display:flex; gap:8px; flex-wrap:wrap; }
+  .step-controls button{ padding:7px 14px; font-size:11.5px; }
+  .step-controls button.ghost{ background:transparent; border:1px solid var(--ink-soft); color:var(--ink); }
+  .step-controls button.ghost:hover{ background:rgba(43,58,74,0.08); }
 </style>
 </head>
 <body>
 
 <div class="sheet">
   <div class="letterhead">
-    <h1>Records Office — Beam Inspection Story</h1>
-    <div class="file-no">FILE No. n!<br>DEPT. OF STRUCTURAL SAFETY</div>
+    <h1>Lab 1 — Strings &amp; Linked Lists</h1>
+    <div class="file-no">CEUA301<br>COMPETITIVE PROGRAMMING ESSENTIALS</div>
   </div>
-  <div class="subtitle">Walk through the story stage by stage. Move the slider, then step through.</div>
+  <div class="subtitle">Three problems, worked from the basics — story, idea, dry run, and plain C++ code (no recursion, no advanced tricks).</div>
 
-  <div class="controls">
-    <label for="nSlider">Documents (n)</label>
-    <input type="range" id="nSlider" min="3" max="10" value="5" step="1">
-    <div class="n-badge" id="nVal">5</div>
-  </div>
-
-  <div class="stepper">
-    <div class="stepdot" data-i="0"></div>
-    <div class="stepdot" data-i="1"></div>
-    <div class="stepdot" data-i="2"></div>
-    <div class="stepdot" data-i="3"></div>
-    <div class="stepdot" data-i="4"></div>
-  </div>
-  <div class="stage-labels">
-    <span data-i="0">1. The shelf</span>
-    <span data-i="1">2. The multiplication</span>
-    <span data-i="2">3. The tower</span>
-    <span data-i="3">4. The report</span>
-    <span data-i="4">5. The code</span>
+  <div class="tabs">
+    <div class="tab active" data-t="0">2.1 Combining Registries</div>
+    <div class="tab" data-t="1">2.2 Circular Cipher</div>
+    <div class="tab" data-t="2">2.3 Merchant's Ledger</div>
   </div>
 
-  <div class="stage-box" id="stageBox"></div>
+  <!-- PANEL 1 : 2.1 -->
+  <div class="panel active" id="panel0">
+    <p class="caption">Two departments each keep a <b>sorted</b> linked list of employee IDs. For an audit, both lists must become <b>one sorted list</b> — by re-linking the existing nodes, not by copying data into new ones.</p>
 
-  <div class="navrow">
-    <button id="backBtn">&larr; Back</button>
-    <button id="nextBtn">Next &rarr;</button>
+    <div class="idea-box">
+      <b>Idea:</b> look at the front of both lists. Whichever front value is smaller, pull that node into the result and move that list forward. Repeat until one list runs out, then attach whatever remains of the other list — it is already sorted, so nothing more to check.
+    </div>
+
+    <h3 class="section-h">Dry run — list1 = [1,2,4], list2 = [1,3,4]</h3>
+    <div class="stepper-box">
+      <div class="step-progress" id="prog0"></div>
+      <div id="stage0"></div>
+      <div class="step-note" id="note0"></div>
+      <div class="step-controls">
+        <button class="ghost" data-act="reset" data-p="0">&#8634; reset</button>
+        <button class="ghost" data-act="prev" data-p="0">&larr; step</button>
+        <button data-act="play" data-p="0" id="play0">play &#9658;</button>
+        <button class="ghost" data-act="next" data-p="0">step &rarr;</button>
+      </div>
+    </div>
+
+    <h3 class="section-h">Why a dummy node?</h3>
+    <p class="caption">At the very start, the result list is empty — there is no node yet to attach anything to. A dummy node is a throwaway placeholder that gives the code somewhere to attach the first real node, so there is no special-case handling for "is this the first node?" The final answer starts right after the dummy.</p>
+
+    <details>
+      <summary>Show C++ code</summary>
+      <pre><span class="comment">// merge two already-sorted linked lists by re-linking nodes</span>
+#include &lt;iostream&gt;
+using namespace std;
+
+struct Node {
+    int data;
+    Node* next;
+};
+
+Node* newNode(int val) {
+    Node* n = new Node();
+    n-&gt;data = val;
+    n-&gt;next = NULL;
+    return n;
+}
+
+Node* mergeTwoLists(Node* list1, Node* list2) {
+    Node dummy;
+    dummy.next = NULL;
+    Node* tail = &amp;dummy;
+
+    while (list1 != NULL &amp;&amp; list2 != NULL) {
+        if (list1-&gt;data &lt;= list2-&gt;data) {
+            tail-&gt;next = list1;
+            list1 = list1-&gt;next;
+        } else {
+            tail-&gt;next = list2;
+            list2 = list2-&gt;next;
+        }
+        tail = tail-&gt;next;
+    }
+
+    if (list1 != NULL) tail-&gt;next = list1;
+    else tail-&gt;next = list2;
+
+    return dummy.next;
+}
+
+void printList(Node* head) {
+    while (head != NULL) {
+        cout &lt;&lt; head-&gt;data &lt;&lt; " ";
+        head = head-&gt;next;
+    }
+    cout &lt;&lt; endl;
+}
+
+int main() {
+    Node* list1 = newNode(1);
+    list1-&gt;next = newNode(2);
+    list1-&gt;next-&gt;next = newNode(4);
+
+    Node* list2 = newNode(1);
+    list2-&gt;next = newNode(3);
+    list2-&gt;next-&gt;next = newNode(4);
+
+    Node* merged = mergeTwoLists(list1, list2);
+    printList(merged);
+    return 0;
+}</pre>
+    </details>
+
+    <div class="qa">
+      <div class="qa-item"><b>Q: why re-link instead of making new nodes?</b> the problem says "splicing existing nodes" — reusing nodes avoids copying data, saving both memory and time.</div>
+      <div class="qa-item"><b>Q: what if both lists are empty?</b> the while loop never runs, both ifs see NULL, dummy.next stays NULL — correctly returns an empty list.</div>
+      <div class="qa-item"><b>Q: time complexity?</b> O(n + m) — every node from both lists is visited exactly once.</div>
+    </div>
   </div>
 
-  <details>
-    <summary>Show C++ reference code</summary>
-    <pre><span class="comment">// step 1: find n!  step 2: count zeroes from the end</span>
+  <!-- PANEL 2 : 2.2 -->
+  <div class="panel" id="panel1">
+    <p class="caption">A circular sequence means the array wraps around — after the last index comes the first index again, like numbers on a clock. Every value must be replaced by the sum of the next <b>k</b> values (or previous <b>|k|</b> if k is negative, or 0 if k is 0).</p>
+
+    <div class="idea-box">
+      <b>Idea:</b> wrapping around an array is just the remainder after dividing by the array length — the <b>%</b> (modulo) operator does this in one step. Going forward: <code>(i + step) % n</code>. Going backward: <code>(i - step + n) % n</code> — the extra <code>+ n</code> keeps the number positive before taking the remainder.
+    </div>
+
+    <h3 class="section-h">Dry run — code = [5,7,1,4], k = 3</h3>
+    <div class="stepper-box">
+      <div class="step-progress" id="prog1"></div>
+      <div id="stage1"></div>
+      <div class="step-note" id="note1"></div>
+      <div class="step-controls">
+        <button class="ghost" data-act="reset" data-p="1">&#8634; reset</button>
+        <button class="ghost" data-act="prev" data-p="1">&larr; step</button>
+        <button data-act="play" data-p="1" id="play1">play &#9658;</button>
+        <button class="ghost" data-act="next" data-p="1">step &rarr;</button>
+      </div>
+    </div>
+
+    <details>
+      <summary>Show C++ code</summary>
+      <pre><span class="comment">// circular array decryption using modulo wraparound</span>
 #include &lt;iostream&gt;
 using namespace std;
 
 int main() {
-    int n;
+    int n, k;
     cout &lt;&lt; "Enter n: ";
     cin &gt;&gt; n;
 
-    <span class="comment">// step 1: calculate factorial</span>
-    long long fact = 1;
-    for (int i = 1; i &lt;= n; i++) {
-        fact = fact * i;
-    }
-    cout &lt;&lt; "n! = " &lt;&lt; fact &lt;&lt; endl;
+    int code[100];
+    cout &lt;&lt; "Enter " &lt;&lt; n &lt;&lt; " numbers: ";
+    for (int i = 0; i &lt; n; i++) cin &gt;&gt; code[i];
 
-    <span class="comment">// step 2: keep dividing by 10 while last digit is 0</span>
-    int count = 0;
-    while (fact % 10 == 0) {
-        count = count + 1;
-        fact = fact / 10;
+    cout &lt;&lt; "Enter k: ";
+    cin &gt;&gt; k;
+
+    int result[100];
+
+    for (int i = 0; i &lt; n; i++) {
+        int sum = 0;
+
+        if (k &gt; 0) {
+            for (int j = 1; j &lt;= k; j++) {
+                int idx = (i + j) % n;
+                sum = sum + code[idx];
+            }
+        }
+        else if (k &lt; 0) {
+            int steps = -k;
+            for (int j = 1; j &lt;= steps; j++) {
+                int idx = (i - j + n) % n;
+                sum = sum + code[idx];
+            }
+        }
+        else {
+            sum = 0;
+        }
+
+        result[i] = sum;
     }
 
-    cout &lt;&lt; "Trailing zeroes = " &lt;&lt; count &lt;&lt; endl;
+    cout &lt;&lt; "Decrypted array: ";
+    for (int i = 0; i &lt; n; i++) cout &lt;&lt; result[i] &lt;&lt; " ";
+    cout &lt;&lt; endl;
     return 0;
 }</pre>
-  </details>
+    </details>
+
+    <div class="qa">
+      <div class="qa-item"><b>Q: why % n instead of manual checking?</b> without it you would need an extra if to bring an out-of-range index back — modulo does that in one step.</div>
+      <div class="qa-item"><b>Q: why add + n before % for negative steps?</b> C++ can return a negative remainder for negative numbers; adding n first keeps the value positive so the wraparound is correct.</div>
+      <div class="qa-item"><b>Q: why a separate result array?</b> updating code[] in place would corrupt values that later indices still need to read.</div>
+      <div class="qa-item"><b>Q: time complexity?</b> O(n × |k|).</div>
+    </div>
+  </div>
+
+  <!-- PANEL 3 : 2.3 -->
+  <div class="panel" id="panel2">
+    <p class="caption">Two numbers are given as <b>strings</b> because they are too big for any built-in integer type. Converting to int/long long is not allowed — multiplication must happen <b>digit by digit</b>, exactly like the pen-and-paper method from school.</p>
+
+    <div class="idea-box">
+      <b>Idea:</b> multiplying two single digits never gives more than 2 digits (max 9×9=81). So each digit-pair's product is split across exactly two positions in the result array — the position depends only on how far each digit is from the right end of its own number.
+    </div>
+
+    <h3 class="section-h">Dry run — "12" &times; "34"</h3>
+    <div class="stepper-box">
+      <div class="step-progress" id="prog2"></div>
+      <div id="stage2"></div>
+      <div class="step-note" id="note2"></div>
+      <div class="step-controls">
+        <button class="ghost" data-act="reset" data-p="2">&#8634; reset</button>
+        <button class="ghost" data-act="prev" data-p="2">&larr; step</button>
+        <button data-act="play" data-p="2" id="play2">play &#9658;</button>
+        <button class="ghost" data-act="next" data-p="2">step &rarr;</button>
+      </div>
+    </div>
+
+    <details>
+      <summary>Show C++ code</summary>
+      <pre><span class="comment">// digit-by-digit string multiplication, no built-in big integers</span>
+#include &lt;iostream&gt;
+#include &lt;string&gt;
+using namespace std;
+
+int main() {
+    string num1, num2;
+    cout &lt;&lt; "Enter num1: ";
+    cin &gt;&gt; num1;
+    cout &lt;&lt; "Enter num2: ";
+    cin &gt;&gt; num2;
+
+    int n1 = num1.length();
+    int n2 = num2.length();
+    int result[200] = {0};
+
+    for (int i = n1 - 1; i &gt;= 0; i--) {
+        for (int j = n2 - 1; j &gt;= 0; j--) {
+
+            int digit1 = num1[i] - '0';
+            int digit2 = num2[j] - '0';
+            int mul = digit1 * digit2;
+
+            int pos_low  = (n1 - 1 - i) + (n2 - 1 - j);
+            int pos_high = pos_low + 1;
+
+            result[pos_low] = result[pos_low] + mul;
+
+            if (result[pos_low] &gt;= 10) {
+                result[pos_high] = result[pos_high] + result[pos_low] / 10;
+                result[pos_low] = result[pos_low] % 10;
+            }
+        }
+    }
+
+    string answer = "";
+    int size = n1 + n2;
+    int i = size - 1;
+
+    while (i &gt; 0 &amp;&amp; result[i] == 0) i--;
+    while (i &gt;= 0) { answer = answer + to_string(result[i]); i--; }
+
+    cout &lt;&lt; "Product: " &lt;&lt; answer &lt;&lt; endl;
+    return 0;
+}</pre>
+    </details>
+
+    <div class="qa">
+      <div class="qa-item"><b>Q: why size n1 + n2 for the result array?</b> the product of an n1-digit and n2-digit number never has more than n1+n2 digits.</div>
+      <div class="qa-item"><b>Q: what does num1[i] - '0' do?</b> converts a character digit to its numeric value, using the fact that digit characters sit consecutively in ASCII.</div>
+      <div class="qa-item"><b>Q: why handle carry right after each multiplication instead of at the end?</b> both approaches work — doing it immediately keeps all the logic for one digit-pair in one place.</div>
+      <div class="qa-item"><b>Q: time complexity?</b> O(n1 &times; n2).</div>
+    </div>
+  </div>
+
 </div>
 
 <script>
-const slider = document.getElementById('nSlider');
-const nVal = document.getElementById('nVal');
-const stageBox = document.getElementById('stageBox');
-const backBtn = document.getElementById('backBtn');
-const nextBtn = document.getElementById('nextBtn');
-const dots = document.querySelectorAll('.stepdot');
-const labels = document.querySelectorAll('.stage-labels span');
-
-let stage = 0;
-
-function factorial(n) {
-  let r = 1n;
-  for (let i = 2n; i <= BigInt(n); i++) r *= i;
-  return r;
-}
-
-function render() {
-  const n = parseInt(slider.value, 10);
-  nVal.textContent = n;
-  const fact = factorial(n);
-  const str = fact.toString();
-  let trailing = 0;
-  for (let i = str.length - 1; i >= 0; i--) {
-    if (str[i] === '0') trailing++; else break;
-  }
-
-  dots.forEach(d => d.classList.toggle('active', parseInt(d.dataset.i, 10) === stage));
-  labels.forEach(l => l.classList.toggle('active', parseInt(l.dataset.i, 10) === stage));
-  backBtn.disabled = stage === 0;
-  nextBtn.disabled = stage === 4;
-
-  if (stage !== 4 && window.__tracers) {
-    Object.values(window.__tracers).forEach(t => clearInterval(t.timer));
-  }
-
-  if (stage === 0) {
-    let files = '';
-    for (let i = 1; i <= n; i++) files += '<div class="doc">' + i + '</div>';
-    stageBox.innerHTML =
-      '<p class="caption">Every year, the office takes documents numbered 1 through n and lines them up on the shelf. Here n = ' + n + '.</p>' +
-      '<div class="docs">' + files + '</div>';
-  }
-
-  if (stage === 1) {
-    let terms = [];
-    for (let i = 1; i <= n; i++) terms.push(i);
-    stageBox.innerHTML =
-      '<p class="caption">The office does not count the documents — it multiplies every number on the shelf together. This product is written n!, and it becomes the height of the tower.</p>' +
-      '<div class="equation">' + terms.join(' &times; ') + ' = <span class="result">' + str + '</span></div>' +
-      '<p class="note">n! = ' + n + '! = ' + str + '</p>';
-  }
-
-  if (stage === 2) {
-    const digits = str.split('').reverse();
-    let floors = '';
-    digits.forEach((d, idx) => {
-      const isBeam = idx < trailing;
-      floors += '<div class="floor' + (isBeam ? ' beam' : '') + '">' + d +
-        (isBeam ? '<span class="tag">beam</span>' : '') + '</div>';
-    });
-    stageBox.innerHTML =
-      '<p class="caption">The tower is built floor by floor from the ground up — one floor per digit of n!, read from the last digit to the first. The amber floors at the base are the trailing zeroes, and every one of them needs a support beam.</p>' +
-      '<div class="tower">' + floors + '</div>';
-  }
-
-  if (stage === 3) {
-    stageBox.innerHTML =
-      '<p class="caption">The inspector signs off with the final tally.</p>' +
-      '<div class="ledger">' +
-      '<div class="ledger-row"><span>documents on the shelf (n)</span><span class="val">' + n + '</span></div>' +
-      '<div class="ledger-row"><span>tower height (n!)</span><span class="val">' + str + '</span></div>' +
-      '<div class="ledger-total"><span>beams required</span><span class="num">' + trailing + '</span></div>' +
-      '</div>';
-  }
-
-  if (stage === 4) {
-    if (window.__tracers) { Object.values(window.__tracers).forEach(t => clearInterval(t.timer)); }
-    stageBox.innerHTML =
-      '<p class="caption">Step through the actual code, one line at a time. The highlighted line is executing right now, and the panel on the right shows what the variables hold at that moment.</p>' +
-      '<p class="part-label">part 1 — building the factorial</p>' +
-      tracerHTML('a', [
-        'long long fact = 1;',
-        'for (int i = 1; i &lt;= n; i++) {',
-        '&nbsp;&nbsp;fact = fact * i;',
-        '}'
-      ], ['i', 'fact']) +
-      '<p class="part-label" style="margin-top:26px;">part 2 — counting the zeroes</p>' +
-      tracerHTML('b', [
-        'int count = 0;',
-        'while (fact % 10 == 0) {',
-        '&nbsp;&nbsp;count = count + 1;',
-        '&nbsp;&nbsp;fact = fact / 10;',
-        '}'
-      ], ['fact', 'count']);
-
-    initFactorialTrace('a', n);
-    initZeroTrace('b', fact);
-  }
-}
-
-function tracerHTML(prefix, lines, watchLabels) {
-  let codeHTML = '';
-  lines.forEach((l, i) => {
-    codeHTML += '<div class="trace-line" id="tl' + prefix + i + '"><span class="ln">' + (i + 1) + '</span>' + l + '</div>';
+document.querySelectorAll('.tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    tab.classList.add('active');
+    document.getElementById('panel' + tab.dataset.t).classList.add('active');
   });
-  let watchHTML = '';
-  watchLabels.forEach(lbl => {
-    watchHTML += '<div class="watch-card"><div class="lbl">' + lbl + '</div><div class="num" id="watch' + prefix + '_' + lbl + '">0</div></div>';
-  });
-  return '<div class="tracer-wrap">' +
-      '<div class="trace-code">' + codeHTML + '</div>' +
-      '<div class="trace-watch">' + watchHTML + '</div>' +
-    '</div>' +
-    '<div class="trace-note" id="traceNote' + prefix + '"></div>' +
-    '<div class="trace-progress" id="traceProgress' + prefix + '"></div>' +
-    '<div class="trace-controls">' +
-      '<button class="ghost" data-act="reset" data-p="' + prefix + '">&#8634; reset</button>' +
-      '<button class="ghost" data-act="prev" data-p="' + prefix + '">&larr; step</button>' +
-      '<button data-act="play" data-p="' + prefix + '" id="tracePlay' + prefix + '">play &#9658;</button>' +
-      '<button class="ghost" data-act="next" data-p="' + prefix + '">step &rarr;</button>' +
-    '</div>';
-}
+});
 
-function initFactorialTrace(prefix, n) {
-  const steps = [];
-  let f = 1n;
-  steps.push({ line: 0, vals: { i: '\u2013', fact: f }, note: 'fact starts at 1, before the loop runs. multiplying by 1 first keeps the chain simple.' });
-  for (let i = 1; i <= n; i++) {
-    steps.push({ line: 1, vals: { i: i, fact: f }, note: 'i = ' + i + ' — check i \u2264 n (' + i + ' \u2264 ' + n + ') \u2192 true, enter the loop body.' });
-    f = f * BigInt(i);
-    steps.push({ line: 2, vals: { i: i, fact: f }, note: 'fact = fact \u00d7 i \u2192 fact becomes ' + f.toString() + '.' });
-  }
-  steps.push({ line: 1, vals: { i: n + 1, fact: f }, note: 'i = ' + (n + 1) + ' — check i \u2264 n (' + (n + 1) + ' \u2264 ' + n + ') \u2192 false, loop stops.' });
-  steps.push({ line: 3, vals: { i: n + 1, fact: f }, note: 'loop finished. fact now holds n! = ' + f.toString() + '.' });
-  setupTracer(prefix, steps, 4);
-}
+/* ---------- generic stepper engine ---------- */
+window.__steppers = {};
 
-function initZeroTrace(prefix, factBig) {
-  const steps = [];
-  let count = 0;
-  let f = factBig;
-  steps.push({ line: 0, vals: { fact: f, count: count }, note: 'start: count is set to 0, before the loop even runs.' });
-  let guard = 0;
-  while (guard < 40) {
-    const last = f % 10n;
-    if (last === 0n) {
-      steps.push({ line: 1, vals: { fact: f, count: count }, note: 'fact % 10 = 0, so the condition is true and we enter the loop body.' });
-      count++;
-      steps.push({ line: 2, vals: { fact: f, count: count }, note: 'the last digit was 0, so count goes up by 1 \u2192 count = ' + count + '.' });
-      f = f / 10n;
-      steps.push({ line: 3, vals: { fact: f, count: count }, note: 'fact = fact / 10 removes that last digit \u2192 fact is now ' + f.toString() + '.' });
-    } else {
-      steps.push({ line: 1, vals: { fact: f, count: count }, note: 'fact % 10 = ' + last.toString() + ', not 0 \u2014 condition is false, loop stops here.' });
-      steps.push({ line: 4, vals: { fact: f, count: count }, note: 'loop finished. total trailing zeroes found = ' + count + '.' });
-      break;
-    }
-    guard++;
-  }
-  setupTracer(prefix, steps, 5);
-}
-
-function setupTracer(prefix, steps, lineCount) {
-  window.__tracers = window.__tracers || {};
-  window.__tracers[prefix] = { steps, idx: 0, timer: null, lineCount };
-  renderTraceStep(prefix);
+function setupStepper(prefix, steps) {
+  window.__steppers[prefix] = { steps, idx: 0, timer: null };
+  renderStep(prefix);
 
   document.querySelectorAll('[data-p="' + prefix + '"]').forEach(btn => {
     btn.onclick = () => {
-      const t = window.__tracers[prefix];
+      const st = window.__steppers[prefix];
       const act = btn.dataset.act;
-      if (act === 'reset') { clearInterval(t.timer); t.idx = 0; renderTraceStep(prefix); setPlayLabel(prefix, false); }
-      if (act === 'prev') { clearInterval(t.timer); setPlayLabel(prefix, false); t.idx = Math.max(0, t.idx - 1); renderTraceStep(prefix); }
-      if (act === 'next') { clearInterval(t.timer); setPlayLabel(prefix, false); stepForward(prefix); }
+      if (act === 'reset') { clearInterval(st.timer); st.idx = 0; renderStep(prefix); setPlayLbl(prefix, false); }
+      if (act === 'prev') { clearInterval(st.timer); setPlayLbl(prefix, false); st.idx = Math.max(0, st.idx - 1); renderStep(prefix); }
+      if (act === 'next') { clearInterval(st.timer); setPlayLbl(prefix, false); stepFwd(prefix); }
       if (act === 'play') {
-        const playing = document.getElementById('tracePlay' + prefix).dataset.playing === '1';
-        if (playing) { clearInterval(t.timer); setPlayLabel(prefix, false); }
+        const playing = document.getElementById('play' + prefix).dataset.playing === '1';
+        if (playing) { clearInterval(st.timer); setPlayLbl(prefix, false); }
         else {
-          setPlayLabel(prefix, true);
-          t.timer = setInterval(() => {
-            if (!stepForward(prefix)) { clearInterval(t.timer); setPlayLabel(prefix, false); }
-          }, 900);
+          setPlayLbl(prefix, true);
+          st.timer = setInterval(() => {
+            if (!stepFwd(prefix)) { clearInterval(st.timer); setPlayLbl(prefix, false); }
+          }, 1100);
         }
       }
     };
   });
 }
 
-function setPlayLabel(prefix, playing) {
-  const btn = document.getElementById('tracePlay' + prefix);
+function setPlayLbl(prefix, playing) {
+  const btn = document.getElementById('play' + prefix);
   if (!btn) return;
   btn.dataset.playing = playing ? '1' : '0';
   btn.textContent = playing ? 'pause' : 'play \u25B8';
 }
 
-function stepForward(prefix) {
-  const t = window.__tracers[prefix];
-  if (t.idx >= t.steps.length - 1) return false;
-  t.idx++;
-  renderTraceStep(prefix);
-  return t.idx < t.steps.length - 1;
+function stepFwd(prefix) {
+  const st = window.__steppers[prefix];
+  if (st.idx >= st.steps.length - 1) return false;
+  st.idx++;
+  renderStep(prefix);
+  return st.idx < st.steps.length - 1;
 }
 
-function renderTraceStep(prefix) {
-  const t = window.__tracers[prefix];
-  const s = t.steps[t.idx];
-  for (let i = 0; i < t.lineCount; i++) {
-    const el = document.getElementById('tl' + prefix + i);
-    if (el) el.classList.toggle('active', i === s.line);
-  }
-  Object.keys(s.vals).forEach(key => {
-    const el = document.getElementById('watch' + prefix + '_' + key);
-    if (el) el.textContent = s.vals[key].toString();
+function renderStep(prefix) {
+  const st = window.__steppers[prefix];
+  const s = st.steps[st.idx];
+  document.getElementById('stage' + prefix).innerHTML = s.html;
+  document.getElementById('note' + prefix).textContent = s.note;
+  document.getElementById('prog' + prefix).textContent = 'step ' + (st.idx + 1) + ' of ' + st.steps.length;
+}
+
+function cellRow(label, cells) {
+  return '<div class="cell-row"><span class="row-label">' + label + '</span>' + cells.join('') + '</div>';
+}
+function cell(val, cls) { return '<div class="cell' + (cls ? ' ' + cls : '') + '">' + val + '</div>'; }
+
+/* ---------- panel 0 : merge sorted lists ---------- */
+(function () {
+  const steps = [];
+  let l1 = [1, 2, 4], l2 = [1, 3, 4], result = [];
+
+  steps.push({
+    html: cellRow('list1', l1.map(v => cell(v))) + cellRow('list2', l2.map(v => cell(v))) + cellRow('result', ['<span style="color:var(--ink-soft);font-size:12px;">(empty)</span>']),
+    note: 'starting state — both lists are already sorted, result is empty.'
   });
-  const note = document.getElementById('traceNote' + prefix);
-  if (note) note.textContent = s.note;
-  const prog = document.getElementById('traceProgress' + prefix);
-  if (prog) prog.textContent = 'step ' + (t.idx + 1) + ' of ' + t.steps.length;
-}
 
-slider.addEventListener('input', render);
-nextBtn.addEventListener('click', () => { if (stage < 4) { stage++; render(); } });
-backBtn.addEventListener('click', () => { if (stage > 0) { stage--; render(); } });
-dots.forEach(d => d.addEventListener('click', () => { stage = parseInt(d.dataset.i, 10); render(); }));
+  while (l1.length && l2.length) {
+    let picked, cmpNote;
+    if (l1[0] <= l2[0]) {
+      picked = l1.shift();
+      cmpNote = picked + ' (list1 front) \u2264 ' + l2[0] + ' (list2 front) \u2192 take from list1.';
+    } else {
+      picked = l2.shift();
+      cmpNote = picked + ' (list2 front) is smaller \u2192 take from list2.';
+    }
+    result.push(picked);
+    steps.push({
+      html: cellRow('list1', l1.length ? l1.map(v => cell(v)) : ['<span style="color:var(--ink-soft);font-size:12px;">(empty)</span>'])
+        + cellRow('list2', l2.length ? l2.map(v => cell(v)) : ['<span style="color:var(--ink-soft);font-size:12px;">(empty)</span>'])
+        + cellRow('result', result.map((v, i) => cell(v, i === result.length - 1 ? 'result pick' : 'result'))),
+      note: cmpNote
+    });
+  }
 
-render();
+  if (l1.length || l2.length) {
+    const remaining = l1.length ? l1 : l2;
+    const fromWhich = l1.length ? 'list1' : 'list2';
+    result = result.concat(remaining);
+    steps.push({
+      html: cellRow('list1', ['<span style="color:var(--ink-soft);font-size:12px;">(empty)</span>'])
+        + cellRow('list2', ['<span style="color:var(--ink-soft);font-size:12px;">(empty)</span>'])
+        + cellRow('result', result.map(v => cell(v, 'result'))),
+      note: 'one list ran out \u2014 the rest of ' + fromWhich + ' is already sorted, so it is attached directly to the end.'
+    });
+  }
+
+  setupStepper('0', steps);
+})();
+
+/* ---------- panel 1 : circular cipher ---------- */
+(function () {
+  const code = [5, 7, 1, 4], n = 4, k = 3;
+  const steps = [];
+  const result = [];
+
+  steps.push({
+    html: cellRow('array', code.map((v, i) => cell(v))) + cellRow('result', ['<span style="color:var(--ink-soft);font-size:12px;">(empty)</span>']),
+    note: 'starting circular array, k = 3 \u2014 each value will be replaced by the sum of the next 3 (wrapping around).'
+  });
+
+  for (let i = 0; i < n; i++) {
+    const idxs = [];
+    for (let j = 1; j <= k; j++) idxs.push((i + j) % n);
+    const sum = idxs.reduce((a, b) => a + code[b], 0);
+    result.push(sum);
+    steps.push({
+      html: cellRow('array', code.map((v, idx) => cell(v, idx === i ? 'pick' : (idxs.includes(idx) ? 'carry' : 'dim'))))
+        + cellRow('result', result.map((v, idx) => cell(v, idx === result.length - 1 ? 'result pick' : 'result'))),
+      note: 'index ' + i + ': next 3 wrapped indices are [' + idxs.join(', ') + '] \u2192 sum = ' + idxs.map(x => code[x]).join('+') + ' = ' + sum + '.'
+    });
+  }
+
+  setupStepper('1', steps);
+})();
+
+/* ---------- panel 2 : string multiplication ---------- */
+(function () {
+  const num1 = '12', num2 = '34';
+  const n1 = num1.length, n2 = num2.length;
+  const result = new Array(n1 + n2).fill(0);
+  const steps = [];
+
+  function snapshot(hi, hj, note) {
+    const row1 = num1.split('').map((c, idx) => cell(c, idx === hi ? 'pick' : ''));
+    const row2 = num2.split('').map((c, idx) => cell(c, idx === hj ? 'pick' : ''));
+    const rowR = result.map((v, idx) => cell(v, 'result')).reverse();
+    steps.push({
+      html: cellRow('num1', row1) + cellRow('num2', row2) + cellRow('result[]', rowR) + '<p style="font-size:10.5px;color:var(--ink-soft);margin:2px 0 0 84px;">(result shown left = highest position)</p>',
+      note: note
+    });
+  }
+
+  snapshot(-1, -1, 'result array starts as all zeros, size = ' + n1 + ' + ' + n2 + ' = ' + (n1 + n2) + '.');
+
+  for (let i = n1 - 1; i >= 0; i--) {
+    for (let j = n2 - 1; j >= 0; j--) {
+      const d1 = num1[i].charCodeAt(0) - 48;
+      const d2 = num2[j].charCodeAt(0) - 48;
+      const mul = d1 * d2;
+      const posLow = (n1 - 1 - i) + (n2 - 1 - j);
+      const posHigh = posLow + 1;
+      result[posLow] += mul;
+      let note = num1[i] + ' \u00d7 ' + num2[j] + ' = ' + mul + ' \u2192 added into result[' + posLow + '].';
+      if (result[posLow] >= 10) {
+        result[posHigh] += Math.floor(result[posLow] / 10);
+        result[posLow] = result[posLow] % 10;
+        note += ' result[' + posLow + '] became 10+ \u2192 carried 1 into result[' + posHigh + '].';
+      }
+      snapshot(i, j, note);
+    }
+  }
+
+  const strResult = (function () {
+    let idx = result.length - 1;
+    while (idx > 0 && result[idx] === 0) idx--;
+    let s = '';
+    while (idx >= 0) { s += result[idx]; idx--; }
+    return s;
+  })();
+  steps.push({
+    html: cellRow('answer', [cell(strResult, 'result pick')]),
+    note: 'drop the leading zero \u2192 final product = ' + strResult + ' (check: 12 \u00d7 34 = 408).'
+  });
+
+  setupStepper('2', steps);
+})();
 </script>
 
 </body>
